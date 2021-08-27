@@ -457,3 +457,5 @@ $RECYCLE.BIN/
 **/Migrations
 
 **/.vscode
+
+**/wwwroot/lib
