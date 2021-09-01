@@ -35,7 +35,7 @@ namespace Web
                 options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"), x => x.MigrationsAssembly("DataAccess")));
 
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-            services.AddTransient<IDefaultService, DefaultService>();
+            services.AddTransient<IPositionService, PositionService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

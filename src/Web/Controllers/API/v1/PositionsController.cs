@@ -10,19 +10,19 @@ namespace Web.Controllers.API
 {
     [Route("api/v1/[controller]")]
     [ApiController]
-    public class DefaultsController : ControllerBase
+    public class PositionsController : ControllerBase
     {
-        private readonly IDefaultService _defaultService;
+        private readonly IPositionService _positionsService;
 
-        public DefaultsController(IDefaultService defaultService)
+        public PositionsController(IPositionService positionsService)
         {
-            _defaultService = defaultService;
+            _positionsService = positionsService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAsync()
         {
-            return Ok(await _defaultService.GetAll());
+            return Ok(await _positionsService.GetAll());
         }
     }
 }

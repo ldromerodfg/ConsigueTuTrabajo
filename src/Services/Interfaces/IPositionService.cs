@@ -4,9 +4,9 @@ using Domain.Entities;
 
 namespace Service.Interfaces
 {
-    public interface IDefaultService
+    public interface IPositionService
     {
-        Task<IEnumerable<Default>> GetAll();
-        Task<Default> GetById(int id);
+        Task<IEnumerable<Position>> GetAll();
+        Task<Position> GetById(int id);
     }
 }

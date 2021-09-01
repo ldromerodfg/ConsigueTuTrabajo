@@ -6,21 +6,21 @@ using Service.Interfaces;
 
 namespace Service.Services
 {
-    public class DefaultService : IDefaultService
+    public class PositionService : IPositionService
     {
-        private IGenericRepository<Default> _repo;
+        private IGenericRepository<Position> _repo;
 
-        public DefaultService(IGenericRepository<Default> repository)
+        public PositionService(IGenericRepository<Position> repository)
         {
             _repo = repository;
         }
 
-        public Task<IEnumerable<Default>> GetAll()
+        public Task<IEnumerable<Position>> GetAll()
         {
             return _repo.GetAll();
         }
 
-        public Task<Default> GetById(int id)
+        public Task<Position> GetById(int id)
         {
             return _repo.GetById(id);
         }

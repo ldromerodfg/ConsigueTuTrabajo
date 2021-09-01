@@ -7,7 +7,7 @@ namespace DataAccess.Contexts
     {
         public DefaultContext(DbContextOptions<DefaultContext> options) : base(options) { }
 
-        public DbSet<Default> Defaults { get; set; }
+        public DbSet<Position> Position { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -19,10 +19,10 @@ namespace DataAccess.Contexts
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Default>(entity =>
+            modelBuilder.Entity<Position>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.ToTable("Defaults");
+                entity.ToTable("Positions");
             });
         }
     }
