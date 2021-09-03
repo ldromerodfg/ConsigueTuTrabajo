@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities
 {
+    [Table("Candidate", Schema = "blogic")]
     [Index(nameof(BreezyId))]
     [Index(nameof(Email))]
     [Index(nameof(Stage))]

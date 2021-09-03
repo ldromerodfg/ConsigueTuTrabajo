@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities
 {
+    [Table("PositionType", Schema = "blogic")]
     [Index(nameof(Short))]
     public class PositionType : BaseEntity
     {

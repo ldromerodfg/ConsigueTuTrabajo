@@ -1,9 +1,11 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities
 {
+    [Table("Resume", Schema = "blogic")]
     [Index(nameof(FileName))]
     public class Resume : BaseEntity
     {

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities
 {
+    [Table("Position", Schema = "blogic")]
     [Index(nameof(Name))]
     [Index(nameof(BreezyId))]
     [Index(nameof(State))]

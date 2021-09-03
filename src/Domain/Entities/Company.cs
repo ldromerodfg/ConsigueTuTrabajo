@@ -1,9 +1,11 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities
 {
+    [Table("Company", Schema = "blogic")]
     [Index(nameof(BreezyId))]
     public class Company : BaseEntity
     {

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities
 {
+    [Table("City", Schema = "blogic")]
     [Index(nameof(Short))]
     public class City : BaseEntity
     {
