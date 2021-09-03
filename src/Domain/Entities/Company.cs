@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using Domain.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities
 {
+    [Index(nameof(BreezyId))]
     public class Company : BaseEntity
     {
         public string BreezyId { get; set; }

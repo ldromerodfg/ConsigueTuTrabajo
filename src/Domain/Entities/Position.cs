@@ -1,9 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities
 {
+    [Index(nameof(Name))]
+    [Index(nameof(BreezyId))]
+    [Index(nameof(State))]
     public class Position : BaseEntity
     {
         public string Name { get; set; }
@@ -24,6 +28,7 @@ namespace Domain.Entities
         public DateTime Created { get; set; }
         public DateTime? Updated { get; set; }
 
+        [ForeignKey("PositionTypeId")]
         public int CompanyId { get; set; }
         public virtual Company Company { get; set; }
 

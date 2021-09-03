@@ -1,9 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities
 {
+    [Index(nameof(BreezyId))]
+    [Index(nameof(Email))]
+    [Index(nameof(Stage))]
     public class Candidate : BaseEntity
     {
         public Candidate()

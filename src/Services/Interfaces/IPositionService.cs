@@ -6,7 +6,7 @@ namespace Service.Interfaces
 {
     public interface IPositionService
     {
-        Task<IEnumerable<Position>> GetAll();
-        Task<Position> GetById(int id);
+        Task<IEnumerable<Position>> GetAllAsync(string state = null, string department = null, int? companyId = null);
+        Task<Position> GetAsync(int id);
     }
 }

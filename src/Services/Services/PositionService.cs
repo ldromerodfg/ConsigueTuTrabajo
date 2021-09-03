@@ -1,28 +1,33 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using DataAccess.Interfaces;
+using DataAccess.Contexts;
 using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using Service.Interfaces;
 
 namespace Service.Services
 {
     public class PositionService : IPositionService
     {
-        private IGenericRepository<Position> _repo;
+        public readonly DefaultContext _dbContext;
 
-        public PositionService(IGenericRepository<Position> repository)
+        public PositionService(DefaultContext dbContext)
         {
-            _repo = repository;
+            _dbContext = dbContext;    
         }
 
-        public Task<IEnumerable<Position>> GetAll()
+        public async Task<IEnumerable<Position>> GetAllAsync(string state = null, string department = null, int? companyId = null)
         {
-            return _repo.GetAll();
+            return await _dbContext.Position.Where(x => 
+                (state == null || x.State == state)
+                && (department == null || x.Department == department)
+                && (companyId == null || x.CompanyId == companyId)).ToListAsync();
         }
 
-        public Task<Position> GetById(int id)
+        public async Task<Position> GetAsync(int id)
         {
-            return _repo.GetById(id);
+            return await _dbContext.Position.FirstOrDefaultAsync(x => x.Id == id);
         }
     }
 }

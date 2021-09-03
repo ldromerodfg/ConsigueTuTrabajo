@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities
 {
+    [Index(nameof(Short))]
     public class State : BaseEntity
     {
         public string Name { get; set; }
@@ -11,8 +13,8 @@ namespace Domain.Entities
 
         [ForeignKey("CountryId")]
         public int CountryId { get; set; }
-
         public virtual Country Country { get; set; }
+        
         public virtual ICollection<City> Cities { get; set; }
     }
 }
