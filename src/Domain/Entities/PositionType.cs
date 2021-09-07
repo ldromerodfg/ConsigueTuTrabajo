@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 namespace Domain.Entities
 {
     [Table("PositionType", Schema = "blogic")]
-    [Index(nameof(Short))]
+    [Index(nameof(Code))]
     public class PositionType : BaseEntity
     {
         public string Name { get; set; }
-        public string Short { get; set; }
+        public string Code { get; set; }
 
         public virtual ICollection<Position> Positions { get; set; }
     }

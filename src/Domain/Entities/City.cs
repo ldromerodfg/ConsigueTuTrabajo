@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Common;
 using Microsoft.EntityFrameworkCore;
@@ -6,11 +7,12 @@ using Microsoft.EntityFrameworkCore;
 namespace Domain.Entities
 {
     [Table("City", Schema = "blogic")]
-    [Index(nameof(Short))]
+    [Index(nameof(Name))]
     public class City : BaseEntity
     {
+        [Required]
+        [MaxLength(60)]
         public string Name { get; set; }
-        public string Short { get; set; }
 
         public virtual ICollection<Position> Positions { get; set; }
 

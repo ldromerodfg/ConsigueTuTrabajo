@@ -29,7 +29,7 @@ namespace Domain.Entities
         public DateTime Created { get; set; }
         public DateTime? Updated { get; set; }
 
-        [ForeignKey("PositionTypeId")]
+        [ForeignKey("CompanyId")]
         public int CompanyId { get; set; }
         public virtual Company Company { get; set; }
 
@@ -37,12 +37,12 @@ namespace Domain.Entities
         public int PositionTypeId { get; set; }
         public virtual PositionType Type { get; set; }
 
-        [ForeignKey("CategoryId")]
-        public int CategoryId { get; set; }
+        [ForeignKey("CategoryId")]  
+        public int? CategoryId { get; set; }
         public virtual Category Category { get; set; }
 
         [ForeignKey("CityId")]
-        public int CityId { get; set; }
+        public int? CityId { get; set; }
         public virtual City City { get; set; }
     }
 }
