@@ -34,7 +34,7 @@ namespace Domain.Entities
         public virtual Company Company { get; set; }
 
         [ForeignKey("PositionTypeId")]
-        public int PositionTypeId { get; set; }
+        public int? PositionTypeId { get; set; }
         public virtual PositionType Type { get; set; }
 
         [ForeignKey("CategoryId")]  

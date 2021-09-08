@@ -24,14 +24,5 @@ namespace DataAccess.Contexts
             optionsBuilder.EnableSensitiveDataLogging();
 #endif
         }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Position>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.ToTable("Positions");
-            });
-        }
     }
 }
