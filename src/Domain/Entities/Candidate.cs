@@ -8,13 +8,9 @@ namespace Domain.Entities
     [Table("Candidate", Schema = "blogic")]
     [Index(nameof(BreezyId))]
     [Index(nameof(Email))]
-    [Index(nameof(Stage))]
     public class Candidate : BaseEntity
     {
-        public Candidate()
-        {
-            Created = DateTime.Now;
-        }
+        public Candidate() { }
 
         public string BreezyId { get; set; }
         public string MetaId { get; set; }
@@ -24,17 +20,21 @@ namespace Domain.Entities
         public string Name { get; set; }
         public string Origin { get; set; }
         public string PhoneNumber { get; set; }
-        public string Stage {get; set; }
+        // TODO: ProfilePhotoURL
 
         public DateTime Created { get; set; }
-        public DateTime Modified { get; set; }
+        public DateTime? Updated { get; set; }
 
         [ForeignKey("PositionId")]
         public int PositionId { get; set; }
         public virtual Position Position { get; set; }
 
         [ForeignKey("ResumeId")]
-        public int ResumeId { get; set; }
+        public int? ResumeId { get; set; }
         public virtual Resume Resume { get; set; }
+
+        [ForeignKey("CandidateStageId")]
+        public int CandidateStageId { get; set; }
+        public virtual CandidateStage Stage { get; set; }
     }
 }

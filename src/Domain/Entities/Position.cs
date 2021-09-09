@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Common;
 using Microsoft.EntityFrameworkCore;
@@ -44,5 +45,7 @@ namespace Domain.Entities
         [ForeignKey("CityId")]
         public int? CityId { get; set; }
         public virtual City City { get; set; }
+
+        public virtual ICollection<Candidate> Candidates { get; set; }
     }
 }

@@ -14,10 +14,10 @@ namespace Domain.Entities
         [MaxLength(60)]
         public string Name { get; set; }
 
-        public virtual ICollection<Position> Positions { get; set; }
-
         [ForeignKey("StateId")]
         public int StateId { get; set; }
         public virtual State State { get; set; }
+
+        public virtual ICollection<Position> Positions { get; set; }
     }
 }
