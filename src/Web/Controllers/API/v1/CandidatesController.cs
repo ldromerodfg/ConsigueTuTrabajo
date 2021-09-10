@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Service.Interfaces;
@@ -28,19 +29,7 @@ namespace Web.Controllers.API
             {
                 var candidates = await _candidateService.GetAllAsync(email, origin, breezyId);
 
-                return Ok(candidates.Select(candidate => new CandidateResponse
-                {
-                    Id = candidate.Id,
-                    Name = candidate.Name,
-                    BreezyId = candidate.BreezyId,
-                    MetaId = candidate.MetaId,
-                    Email = candidate.Email,
-                    Headline = candidate.Headline,
-                    Initial = candidate.Initial,
-                    Origin = candidate.Origin,
-                    PhoneNumber = candidate.PhoneNumber,
-                    Stage = candidate.Stage
-                }));
+                return Ok(candidates.Select(candidate => BuildResponse(candidate)));
             }
             catch (Exception ex)
             {
@@ -58,7 +47,18 @@ namespace Web.Controllers.API
 
                 if (candidate == null) return NotFound();
 
-                return Ok(new CandidateResponse
+                return Ok(BuildResponse(candidate));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return Problem();
+            }
+        }
+
+        private CandidateResponse BuildResponse(Candidate candidate)
+        {
+            return new CandidateResponse
                 {
                     Id = candidate.Id,
                     Name = candidate.Name,
@@ -69,14 +69,14 @@ namespace Web.Controllers.API
                     Initial = candidate.Initial,
                     Origin = candidate.Origin,
                     PhoneNumber = candidate.PhoneNumber,
-                    Stage = candidate.Stage
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message, ex);
-                return Problem();
-            }
+                    Stage = candidate.Stage != null
+                        ? new CandidateStageResponse()
+                        {
+                            Id = candidate.Stage.Id,
+                            Name = candidate.Stage.Name
+                        }
+                        : null
+                };
         }
     }
 }

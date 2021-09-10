@@ -13,7 +13,7 @@ namespace Web.Models
         public string Name { get; set; }
         public string Origin { get; set; }
         public string PhoneNumber { get; set; }
-        public string Stage { get; set; }
+        public CandidateStageResponse Stage { get; set; }
         public DateTime? Updated { get; set; }
         public DateTime Created { get; set; }
     }

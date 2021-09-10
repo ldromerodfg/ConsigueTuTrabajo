@@ -180,168 +180,208 @@ namespace Web
                         {
                             foreach (var company in await context.Company.ToListAsync())
                             {
-                                var positionResponse = await client.GetAsync($"https://api.breezy.hr/v3/company/{company.BreezyId}/positions?state={positionState}");
-                                positionResponse.EnsureSuccessStatusCode();
-                                var positionResponseBody = await positionResponse.Content.ReadAsStringAsync();
+                                var positionResponse = await client.GetAsync(
+                                    $"https://api.breezy.hr/v3/company/{company.BreezyId}/positions?state={positionState}");
 
-                                var positions = JsonConvert.DeserializeObject<dynamic[]>(positionResponseBody);
-
-                                if (positions != null && positions.Any())
+                                if (positionResponse.StatusCode == System.Net.HttpStatusCode.OK)
                                 {
-                                    foreach (var position in positions)
+                                    var positionResponseBody = await positionResponse.Content.ReadAsStringAsync();
+
+                                    var positions = JsonConvert.DeserializeObject<dynamic[]>(positionResponseBody);
+
+                                    if (positions != null && positions.Any())
                                     {
-                                        var positionId = (string)position._id;
-
-                                        if (await context.Position.AnyAsync(x => x.BreezyId == positionId))
+                                        foreach (var position in positions)
                                         {
-                                            continue;
-                                        }
+                                            var positionId = (string)position._id;
 
-                                        var cityName = position.location != null && position.location.city != null
-                                            && !string.IsNullOrEmpty((string)position.location.city)
-                                            ? (string)position.location.city
-                                            : null;
-                                        var stateCode = position.location != null && position.location.state != null
-                                            ? (string)position.location.state.id
-                                            : null;
-                                        var countryCode = position.location != null
-                                            ? (string)position.location.country.id
-                                            : null;
-
-                                        var city = position.location != null
-                                            ? await context.City.FirstOrDefaultAsync(x => x.Name == cityName)
-                                            : null;
-
-                                        if (city == null && cityName != null)
-                                        {
-                                            var state = await context.State.FirstOrDefaultAsync(x => x.Code == stateCode);
-
-                                            if (state == null && stateCode != null)
+                                            if (await context.Position.AnyAsync(x => x.BreezyId == positionId))
                                             {
-                                                var country = await context.Country.FirstOrDefaultAsync(x => x.Code == countryCode);
-
-                                                state = new State
-                                                {
-                                                    Name = position.location.state.name,
-                                                    Code = position.location.state.id,
-                                                    CountryId = country.Id
-                                                };
-
-                                                await context.State.AddAsync(state);
-                                                await context.SaveChangesAsync();
-
-                                                city = new City
-                                                {
-                                                    Name = position.location.city,
-                                                    StateId = state.Id
-                                                };
-                                                await context.City.AddAsync(city);
+                                                continue;
                                             }
-                                            await context.SaveChangesAsync();
-                                        }
 
-                                        var positionTypeId = position.type != null
-                                            ? (string)position.type.id
-                                            : null;
+                                            var cityName = position.location != null && position.location.city != null
+                                                && !string.IsNullOrEmpty((string)position.location.city)
+                                                ? (string)position.location.city
+                                                : null;
+                                            var stateCode = position.location != null && position.location.state != null
+                                                ? (string)position.location.state.id
+                                                : null;
+                                            var countryCode = position.location != null
+                                                ? (string)position.location.country.id
+                                                : null;
 
-                                        var positionType = await context.PositionType.FirstOrDefaultAsync(x => x.Code == positionTypeId);
+                                            var city = position.location != null
+                                                ? await context.City.FirstOrDefaultAsync(x => x.Name == cityName)
+                                                : null;
 
-                                        if (positionTypeId != null && positionType == null)
-                                        {
-                                            positionType = new PositionType
+                                            if (city == null && cityName != null)
                                             {
-                                                Name = position.type.name,
-                                                Code = positionTypeId
+                                                var state = await context.State.FirstOrDefaultAsync(x => x.Code == stateCode);
+
+                                                if (state == null && stateCode != null)
+                                                {
+                                                    var country = await context.Country.FirstOrDefaultAsync(x => x.Code == countryCode);
+
+                                                    state = new State
+                                                    {
+                                                        Name = position.location.state.name,
+                                                        Code = position.location.state.id,
+                                                        CountryId = country.Id
+                                                    };
+
+                                                    await context.State.AddAsync(state);
+                                                    await context.SaveChangesAsync();
+
+                                                    city = new City
+                                                    {
+                                                        Name = position.location.city,
+                                                        StateId = state.Id
+                                                    };
+                                                    await context.City.AddAsync(city);
+                                                }
+                                                await context.SaveChangesAsync();
+                                            }
+
+                                            var positionTypeId = position.type != null
+                                                ? (string)position.type.id
+                                                : null;
+
+                                            var positionType = await context.PositionType.FirstOrDefaultAsync(x => x.Code == positionTypeId);
+
+                                            if (positionTypeId != null && positionType == null)
+                                            {
+                                                positionType = new PositionType
+                                                {
+                                                    Name = position.type.name,
+                                                    Code = positionTypeId
+                                                };
+
+                                                await context.PositionType.AddAsync(positionType);
+                                                await context.SaveChangesAsync();
+                                            }
+
+                                            await context.Position.AddAsync(new Position
+                                            {
+                                                BreezyId = position._id,
+                                                State = position.state,
+                                                Name = position.name,
+                                                Education = position.education,
+                                                Description = position.description,
+                                                Created = DateTime.Now,
+                                                CityId = city != null ? city.Id : null,
+                                                CompanyId = company.Id,
+                                                PositionTypeId = positionType != null ? positionType.Id : null
+                                            });
+                                        }
+                                    }
+                                };
+                            }
+                            await context.SaveChangesAsync();
+                        }
+                    }
+
+                    if (!context.Candidate.Any())
+                    {
+                        var iPosition = 0;
+
+                        foreach (var position in await context.Position.Include(x => x.Company).IgnoreQueryFilters().AsNoTracking().ToListAsync())
+                        {
+                            iPosition++;
+
+                            Debug.WriteLine($"LOOPING POSITION {iPosition} ({position.BreezyId})");
+
+                            var page = 1;
+
+                            var candidateResponse = new HttpResponseMessage() { StatusCode = System.Net.HttpStatusCode.OK };
+
+                            while (candidateResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                            {
+                                var uri = $"https://api.breezy.hr/v3/company/{position.Company.BreezyId}/position/{position.BreezyId}/candidates?page_size=50&page={page}";
+
+                                Debug.WriteLine($"SENDING REQUEST TO {uri}...");
+
+                                candidateResponse = await client.GetAsync(uri);
+
+                                if (candidateResponse.IsSuccessStatusCode)
+                                {
+                                    Debug.WriteLine($"RESPONSE CODE {candidateResponse.StatusCode}");
+
+                                    var candidateResponseBody = await candidateResponse.Content.ReadAsStringAsync();
+
+                                    var candidates = JsonConvert.DeserializeObject<dynamic[]>(candidateResponseBody);
+
+                                    Debug.WriteLine($"TOTAL CANDIDATES: {candidates.Count()}");
+
+                                    if (candidates == null || !candidates.Any())
+                                    {
+                                        Debug.WriteLine($"MOVING TO NEXT POSITION...");
+                                        break;
+                                    }
+
+                                    int n = 1;
+
+                                    foreach (var candidate in candidates)
+                                    {
+                                        var candidateId = (string)candidate._id;
+
+                                        var candidateStageId = (string)candidate.stage.id;
+
+                                        var candidateStage = await context.CandidateStage
+                                            .FirstOrDefaultAsync(x => x.BreezyId == candidateStageId);
+
+                                        if (candidateStage == null)
+                                        {
+                                            candidateStage = new CandidateStage
+                                            {
+                                                BreezyId = candidateStageId,
+                                                Name = (string)candidate.stage.name
                                             };
 
-                                            await context.PositionType.AddAsync(positionType);
+                                            await context.CandidateStage.AddAsync(candidateStage);
+
                                             await context.SaveChangesAsync();
                                         }
 
-                                        await context.Position.AddAsync(new Position
+                                        if (!await context.Candidate.AnyAsync(x => x.BreezyId == candidateId))
                                         {
-                                            BreezyId = position._id,
-                                            State = position.state,
-                                            Name = position.name,
-                                            Education = position.education,
-                                            Description = position.description,
-                                            Created = DateTime.Now,
-                                            CityId = city != null ? city.Id : null,
-                                            CompanyId = company.Id,
-                                            PositionTypeId = positionType != null ? positionType.Id : null
-                                        });
+                                            Debug.Write($".");
+
+                                            await context.Candidate.AddAsync(new Candidate
+                                            {
+                                                BreezyId = candidateId,
+                                                MetaId = (string)candidate.meta_id,
+                                                Email = (string)candidate.email_address,
+                                                Headline = (string)candidate.headline,
+                                                Initial = (string)candidate.initial,
+                                                Name = (string)candidate.name,
+                                                Origin = (string)candidate.origin,
+                                                PhoneNumber = (string)candidate.phone_number,
+                                                Created = DateTime.Parse((string)candidate.creation_date).ToUniversalTime(),
+                                                Updated = (string)candidate.updated_date != null
+                                                    ? DateTime.Parse((string)candidate.creation_date).ToUniversalTime()
+                                                    : null,
+                                                PositionId = position.Id,
+                                                CandidateStageId = candidateStage.Id
+                                            });
+                                            n++;
+                                        }
                                     }
+
+                                    Debug.WriteLine("");
+
+                                    page++;
+                                }
+                                else 
+                                {
+                                    Debug.WriteLine($"UNSUCCESSFUL REQUEST. STATUS CODE {candidateResponse.StatusCode}");
+                                    throw new Exception($"UNSUCCESSFUL REQUEST. STATUS CODE {candidateResponse.StatusCode}");
                                 }
                             }
                         }
+
                         await context.SaveChangesAsync();
                     }
-
-                    // if (!context.Candidate.Any())
-                    // {
-                    //     foreach (var position in await context.Position.Include(x => x.Company).IgnoreQueryFilters().AsNoTracking().ToListAsync())
-                    //     {
-                    //         var candidateResponse = await client.GetAsync($"https://api.breezy.hr/v3/company/{position.Company.BreezyId}/position/{position.BreezyId}/candidates");
-                    //         candidateResponse.EnsureSuccessStatusCode();
-                    //         var candidateResponseBody = await candidateResponse.Content.ReadAsStringAsync();
-
-                    //         var candidates = JsonConvert.DeserializeObject<dynamic[]>(candidateResponseBody);
-
-                    //         if (candidates != null && candidates.Any())
-                    //         {
-                    //             int n = 0;
-
-                    //             foreach (var candidate in candidates)
-                    //             {
-                    //                 var candidateId = (string)candidate._id;
-
-                    //                 var candidateStageId = (string)candidate.stage.id;
-
-                    //                 var candidateStage = await context.CandidateStage
-                    //                     .FirstOrDefaultAsync(x => x.BreezyId == candidateStageId);
-
-                    //                 if (candidateStage == null)
-                    //                 {
-                    //                     candidateStage = new CandidateStage
-                    //                     {
-                    //                         BreezyId = candidateStageId,
-                    //                         Name = (string)candidate.stage.name
-                    //                     };
-
-                    //                     await context.CandidateStage.AddAsync(candidateStage);
-
-                    //                     await context.SaveChangesAsync();
-                    //                 }
-
-                    //                 if (!await context.Candidate.AnyAsync(x => x.BreezyId == candidateId))
-                    //                 {
-                    //                     n++;
-                    //                     Debug.WriteLine($"ADDING Candidate {n}");
-                    //                     await context.Candidate.AddAsync(new Candidate
-                    //                     {
-                    //                         BreezyId = candidateId,
-                    //                         MetaId = (string)candidate.meta_id,
-                    //                         Email = (string)candidate.email_address,
-                    //                         Headline = (string)candidate.headline,
-                    //                         Initial = (string)candidate.initial,
-                    //                         Name = (string)candidate.name,
-                    //                         Origin = (string)candidate.origin,
-                    //                         PhoneNumber = (string)candidate.phone_number,
-                    //                         Created = DateTime.Parse((string)candidate.creation_date).ToUniversalTime(),
-                    //                         Updated = (string)candidate.updated_date != null
-                    //                             ? DateTime.Parse((string)candidate.creation_date).ToUniversalTime()
-                    //                             : null,
-                    //                         PositionId = position.Id,
-                    //                         CandidateStageId = candidateStage.Id
-                    //                     });
-                    //                 }
-                    //             }
-                    //         }
-                    //     }
-
-                    //     await context.SaveChangesAsync();
-                    // }
-
                 }
                 catch (Exception ex)
                 {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Service.Interfaces;
@@ -28,22 +29,7 @@ namespace Web.Controllers.API
             {
                 var positions = await _positionService.GetAllAsync(state, department, companyId);
 
-                return Ok(positions.Select(position => new PositionResponse
-                {
-                    Id = position.Id,
-                    Name = position.Name,
-                    BreezyId = position.BreezyId,
-                    State = position.State,
-                    Description = position.Description,
-                    Education = position.Education,
-                    Department = position.Department,
-                    RequisitionId = position.RequisitionId,
-                    QuestionaireId = position.QuestionaireId,
-                    PipelineId = position.PipelineId,
-                    CandidateType = position.CandidateType,
-                    Tags = position.OrgType,
-                    CreatorId = position.CreatorId
-                }));
+                return Ok(positions.Select(position => BuildResponse(position)));
             }
             catch (Exception ex)
             {
@@ -61,7 +47,18 @@ namespace Web.Controllers.API
 
                 if (position == null) return NotFound();
 
-                return Ok(new PositionResponse
+                return Ok(BuildResponse(position));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return Problem();
+            }
+        }
+
+        private PositionResponse BuildResponse(Position position)
+        {
+            return new PositionResponse
                 {
                     Id = position.Id,
                     Name = position.Name,
@@ -76,13 +73,7 @@ namespace Web.Controllers.API
                     CandidateType = position.CandidateType,
                     Tags = position.OrgType,
                     CreatorId = position.CreatorId
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message, ex);
-                return Problem();
-            }
+                };
         }
     }
 }

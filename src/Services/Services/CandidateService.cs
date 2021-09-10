@@ -19,10 +19,15 @@ namespace Service.Services
 
         public async Task<IEnumerable<Candidate>> GetAllAsync(string email = null, string origin = null, string breezyId = null)
         {
-            return await _dbContext.Candidate.Where(x => 
-                (email == null || x.Email == email)
-                && (origin == null || x.Origin == origin)
-                && (breezyId == null || x.BreezyId == breezyId)).ToListAsync();
+            return await _dbContext.Candidate
+                .Include(x => x.Stage)
+                .AsNoTracking()
+                .IgnoreQueryFilters()
+                .Where(x => 
+                    (email == null || x.Email == email)
+                    && (origin == null || x.Origin == origin)
+                    && (breezyId == null || x.BreezyId == breezyId))
+                .ToListAsync();
         }
 
         public async Task<Candidate> GetAsync(int id)
