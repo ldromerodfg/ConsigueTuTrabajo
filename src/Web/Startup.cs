@@ -38,6 +38,7 @@ namespace Web
                 options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"), x => x.MigrationsAssembly("DataAccess")));
 
             services.AddTransient<IPositionService, PositionService>();
+            services.AddTransient<ICandidateService, CandidateService>();
 
             services.AddSwaggerGen();
         }
@@ -467,9 +468,9 @@ namespace Web
                                         }
                                         else if (candidateResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                                         {
-                                            Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST LIMIT REACHED. WAITING ONE MINUTE...");
-                                            log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST LIMIT REACHED. WAITING ONE MINUTE...";
-                                            Thread.Sleep(90000);
+                                            Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST LIMIT REACHED. WAITING {awaitTime/1000} MINUTES...");
+                                            log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST LIMIT REACHED. {awaitTime/1000} MINUTES...";
+                                            Thread.Sleep(awaitTime);
 
                                             tries++;
                                         }
@@ -477,7 +478,11 @@ namespace Web
                                         {
                                             Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: UNSUCCESSFUL REQUEST. STATUS CODE {candidateResponse.StatusCode}");
                                             log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: UNSUCCESSFUL REQUEST. STATUS CODE {candidateResponse.StatusCode}";
-
+                                            
+                                            Thread.Sleep(awaitTime);
+                                            Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST LIMIT REACHED. WAITING {awaitTime/1000} MINUTES...");
+                                            log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST LIMIT REACHED. {awaitTime/1000} MINUTES...";
+                                            
                                             tries++;
                                         }
                                     }
@@ -513,7 +518,9 @@ namespace Web
 
                                     if (tries == maxTries) throw new Exception("REQUEST TRIES LIMIT REACHED");
 
-                                    Thread.Sleep(30000);
+                                    Thread.Sleep(awaitTime);
+                                    Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: WAITING {awaitTime/1000} seconds");
+                                    log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: WAITING {awaitTime/1000} seconds";
                                     tries++;
                                 }
                             }
