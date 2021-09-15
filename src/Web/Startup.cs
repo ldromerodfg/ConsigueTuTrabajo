@@ -94,7 +94,8 @@ namespace Web
             string log = "";
             string breezyToken = null;
             TimeSpan requestTimeout = TimeSpan.FromMinutes(2);
-            var maxTries = 3;
+            var maxTries = 5;
+            var awaitTime = 30000;
 
             using (var client = new HttpClient())
             {
@@ -485,10 +486,10 @@ namespace Web
                                 }
                                 catch (TaskCanceledException ex)
                                 {
-                                    if (!ex.CancellationToken.IsCancellationRequested)
+                                    if (ex.CancellationToken.IsCancellationRequested)
                                     {
-                                        Debug.WriteLine($"REQUEST TIMEOUT. TRYING AGAIN ({tries} of {maxTries})...");
-                                        log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST TIMEOUT. TRYING AGAIN ({tries} of {maxTries})...";
+                                        Debug.WriteLine($"REQUEST TIMEOUT. ({tries} of {maxTries})...");
+                                        log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST TIMEOUT. ({tries} of {maxTries})...";
                                     }
                                     else 
                                     {
@@ -498,7 +499,10 @@ namespace Web
 
                                     if (tries == maxTries) throw new Exception("REQUEST TRIES LIMIT REACHED");
 
-                                    Thread.Sleep(10000);
+                                    Thread.Sleep(awaitTime);
+
+                                    Debug.WriteLine($"WAITING {awaitTime}...");
+                                    log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST TIMEOUT. TRYING AGAIN ({tries} of {maxTries})...";
 
                                     tries++;
                                 }
@@ -507,14 +511,13 @@ namespace Web
                                     Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {ex.Message}");
                                     log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {ex.Message}";
 
-                                    if (tries == 3) throw new Exception("REQUEST TRIES LIMIT REACHED");
+                                    if (tries == maxTries) throw new Exception("REQUEST TRIES LIMIT REACHED");
 
-                                    Thread.Sleep(10000);
+                                    Thread.Sleep(30000);
                                     tries++;
                                 }
                             }
-                            while (candidateResponse.StatusCode == System.Net.HttpStatusCode.OK
-                                || candidateResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests);
+                            while (true);
                         }
 
                         await context.SaveChangesAsync();
