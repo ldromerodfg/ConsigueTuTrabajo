@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -112,15 +113,13 @@ namespace Web
                         Content = new FormUrlEncodedContent(content)
                     };
 
-                    Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: Requesting for Breezy token...");
-                    log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: Requesting for Breezy token...";
+                    log += WriteOnLog("Requesting for Breezy token...");
 
                     var response = await client.SendAsync(request);
 
                     if (response.IsSuccessStatusCode)
                     {
-                        Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: SUCCESS");
-                        log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: SUCCESS";
+                        log += WriteOnLog($"SUCCESS");
 
                         var responseBody = await response.Content.ReadAsStringAsync();
 
@@ -128,26 +127,23 @@ namespace Web
 
                         breezyToken = userInfo.access_token;
 
-                        Debug.WriteLine($"Breezy Token: {breezyToken}");
+                        log += WriteOnLog($"Breezy Token: {breezyToken}");
                     }
                     else
                     {
-                        Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST UNSUCCESSFUL. HttpStatus: {response.StatusCode}");
-                        log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST UNSUCCESSFUL. HttpStatus: {response.StatusCode}";
+                        log += WriteOnLog($"REQUEST UNSUCCESSFUL. HttpStatus: {response.StatusCode}");
                     }
                 }
                 catch (TaskCanceledException ex)
                 {
                     if (!ex.CancellationToken.IsCancellationRequested)
                     {
-                        Debug.WriteLine($"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST TIMEOUT.");
-                        log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST TIMEOUT.";
+                        log += WriteOnLog("REQUEST TIMEOUT.");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {ex.Message}");
-                    log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {ex.Message}";
+                    log += WriteOnLog(ex.Message);
                 }
             }
 
@@ -353,7 +349,6 @@ namespace Web
                                 }
                                 await context.SaveChangesAsync();
                             }
-
                         }
                         catch (Exception ex)
                         {
@@ -373,8 +368,7 @@ namespace Web
                         {
                             iPosition++;
 
-                            Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: LOOPING POSITION {iPosition} ({position.BreezyId})...");
-                            log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: LOOPING POSITION {iPosition} ({position.BreezyId})...";
+                            log += WriteOnLog($"LOOPING POSITION {iPosition} ({position.BreezyId})...");
 
                             var page = 1;
 
@@ -394,15 +388,13 @@ namespace Web
 
                                         var uri = $"https://api.breezy.hr/v3/company/{position.Company.BreezyId}/position/{position.BreezyId}/candidates?page_size=50&page={page}";
 
-                                        Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: (POSITION {iPosition}) SENDING REQUEST TO {uri}...");
-                                        log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: ({iPosition}) SENDING REQUEST TO {uri}...";
+                                        log += WriteOnLog($"(POSITION {iPosition}) SENDING REQUEST TO {uri}...");
 
                                         candidateResponse = await client.GetAsync(uri);
 
                                         if (candidateResponse.IsSuccessStatusCode)
                                         {
-                                            Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: SUCCESS");
-                                            log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: SUCCESS";
+                                            log += WriteOnLog("SUCCESS");
 
                                             var candidateResponseBody = await candidateResponse.Content.ReadAsStringAsync();
 
@@ -410,8 +402,7 @@ namespace Web
 
                                             if (candidates == null || !candidates.Any())
                                             {
-                                                Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: MOVING TO NEXT POSITION...");
-                                                log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: MOVING TO NEXT POSITION...";
+                                                log += WriteOnLog($"NO CANDIDATES FOR POSITION {position.BreezyId}. MOVING TO NEXT POSITION...");
                                                 break;
                                             }
 
@@ -460,6 +451,38 @@ namespace Web
                                                     });
                                                     n++;
                                                 }
+
+                                                try
+                                                {
+                                                    if (!Directory.Exists("./wwwroot/cv"))
+                                                    {
+                                                        Directory.CreateDirectory("./wwwroot/cv");
+                                                    }
+                                                }
+                                                catch(Exception ex)
+                                                {
+                                                    log += WriteOnLog(ex.Message);
+                                                }
+
+                                                try
+                                                {
+                                                    using (WebClient webClient = new WebClient())
+                                                    {
+                                                        webClient.Headers.Add("Authorization", breezyToken);
+                                                        
+                                                        log += WriteOnLog($"FETCHING CV FROM {(string)candidate.resume.url}...");
+                                                        byte[] arr = webClient.DownloadData((string)candidate.resume.url);
+
+                                                        log += WriteOnLog($"SUCCESS");
+
+                                                        log += WriteOnLog($"WRITING CV FILE ./wwwroot/cv/cv_{(string)candidate._id}.pdf");
+                                                        File.WriteAllBytes($"./wwwroot/cv/cv_{(string)candidate._id}.pdf", arr);
+                                                    }
+                                                }
+                                                catch (WebException ex)
+                                                {
+                                                    log += WriteOnLog(ex.Message);
+                                                }
                                             }
 
                                             Debug.WriteLine("");
@@ -467,60 +490,56 @@ namespace Web
                                             page++;
                                         }
                                         else if (candidateResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-                                        {
-                                            Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST LIMIT REACHED. WAITING {awaitTime/1000} MINUTES...");
-                                            log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST LIMIT REACHED. {awaitTime/1000} MINUTES...";
+                                        {                                            
+                                            log += WriteOnLog($"REQUEST LIMIT REACHED. WAITING {awaitTime / 1000} MINUTES...");
                                             Thread.Sleep(awaitTime);
 
                                             tries++;
                                         }
                                         else
                                         {
-                                            Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: UNSUCCESSFUL REQUEST. STATUS CODE {candidateResponse.StatusCode}");
-                                            log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: UNSUCCESSFUL REQUEST. STATUS CODE {candidateResponse.StatusCode}";
-                                            
+                                            log += WriteOnLog($"UNSUCCESSFUL REQUEST. STATUS CODE {candidateResponse.StatusCode}");
+
                                             Thread.Sleep(awaitTime);
-                                            Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST LIMIT REACHED. WAITING {awaitTime/1000} MINUTES...");
-                                            log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST LIMIT REACHED. {awaitTime/1000} MINUTES...";
-                                            
+
+                                            log += WriteOnLog($"REQUEST LIMIT REACHED. {awaitTime / 1000} MINUTES...");
+
                                             tries++;
                                         }
                                     }
-                                    
+
                                     if (tries == maxTries) throw new Exception("REQUEST TRIES LIMIT REACHED");
                                 }
                                 catch (TaskCanceledException ex)
                                 {
                                     if (ex.CancellationToken.IsCancellationRequested)
                                     {
-                                        Debug.WriteLine($"REQUEST TIMEOUT. ({tries} of {maxTries})...");
-                                        log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST TIMEOUT. ({tries} of {maxTries})...";
+                                        log += WriteOnLog($"REQUEST TIMEOUT. ({tries} of {maxTries})...");
                                     }
-                                    else 
+                                    else
                                     {
-                                        Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {ex.Message}");
-                                        log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {ex.Message}";
+                                       log += WriteOnLog(ex.Message);
                                     }
 
                                     if (tries == maxTries) throw new Exception("REQUEST TRIES LIMIT REACHED");
 
                                     Thread.Sleep(awaitTime);
 
-                                    Debug.WriteLine($"WAITING {awaitTime}...");
-                                    log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: REQUEST TIMEOUT. TRYING AGAIN ({tries} of {maxTries})...";
+                                    log += WriteOnLog($"TRYING AGAIN ({tries} of {maxTries})...");
+                                    log += WriteOnLog($"REQUEST TIMEOUT. WAITING {awaitTime/1000} SECONDS...");
 
                                     tries++;
                                 }
-                                catch(HttpRequestException ex)
+                                catch (HttpRequestException ex)
                                 {
-                                    Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {ex.Message}");
-                                    log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {ex.Message}";
+                                    log += WriteOnLog(ex.Message);
 
                                     if (tries == maxTries) throw new Exception("REQUEST TRIES LIMIT REACHED");
 
                                     Thread.Sleep(awaitTime);
-                                    Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: WAITING {awaitTime/1000} seconds");
-                                    log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: WAITING {awaitTime/1000} seconds";
+                                    
+                                    log += WriteOnLog($"WAITING {awaitTime / 1000} SECONDS...");
+
                                     tries++;
                                 }
                             }
@@ -531,27 +550,31 @@ namespace Web
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {ex.Message}");
-                        log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {ex.Message}";
+                        log += WriteOnLog(ex.Message);
                     }
                 }
             }
             else
             {
-                Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: Breezy Token is null");
-                log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: Breezy Token is null";
+                log += WriteOnLog("Breezy Token is null");
             }
 
-            Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: EXECUTION FINISHED");
-            log += $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: EXECUTION FINISHED";
-
-            try{
+            log += WriteOnLog("EXECUTION FINISHED");
+            
+            try
+            {
                 await File.WriteAllTextAsync($"./bin/Debug/log_{DateTime.Now.ToString("yyyy-MM-dd_HH:mm:ss")}.txt", log);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {ex.Message}");
+                log += WriteOnLog(ex.Message);
             }
+        }
+
+        private string WriteOnLog(string text)
+        {
+            Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {text}");
+            return $"{Environment.NewLine}{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}: {text}";
         }
     }
 }

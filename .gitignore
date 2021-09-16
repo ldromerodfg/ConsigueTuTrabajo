@@ -459,3 +459,5 @@ $RECYCLE.BIN/
 **/.vscode
 
 **/wwwroot/lib
+
+**/wwwroot/cv
