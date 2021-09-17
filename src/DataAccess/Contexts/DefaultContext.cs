@@ -7,6 +7,7 @@ namespace DataAccess.Contexts
     {
         public DefaultContext(DbContextOptions<DefaultContext> options) : base(options) { }
 
+        public DbSet<Setting> Setting { get; set; }
         public DbSet<Candidate> Candidate { get; set; }
         public DbSet<CandidateStage> CandidateStage { get; set; }
         public DbSet<Category> Category { get; set; }
@@ -21,8 +22,8 @@ namespace DataAccess.Contexts
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
 #if DEBUG
-            optionsBuilder.EnableDetailedErrors();
-            optionsBuilder.EnableSensitiveDataLogging();
+            //optionsBuilder.EnableDetailedErrors();
+            //optionsBuilder.EnableSensitiveDataLogging();
 #endif
         }
     }

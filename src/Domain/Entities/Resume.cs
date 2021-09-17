@@ -17,6 +17,7 @@ namespace Domain.Entities
         public string DirectoryPath { get; set; }
         public string FileName { get; set; }
         public string FileAttribute { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
         public decimal FileSize { get; set; }
 
         public DateTime Created { get; set; }

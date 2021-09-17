@@ -4,16 +4,19 @@ using System.Threading.Tasks;
 using DataAccess.Contexts;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Service.Interfaces;
 
 namespace Service.Services
 {
     public class CandidateService : ICandidateService
     {
+        public readonly ILogger _logger;
         public readonly DefaultContext _dbContext;
 
-        public CandidateService(DefaultContext dbContext)
+        public CandidateService(ILogger<CandidateService> logger, DefaultContext dbContext)
         {
+            _logger = logger;
             _dbContext = dbContext;    
         }
 

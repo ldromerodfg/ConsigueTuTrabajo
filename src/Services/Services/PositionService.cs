@@ -4,16 +4,19 @@ using System.Threading.Tasks;
 using DataAccess.Contexts;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Service.Interfaces;
 
 namespace Service.Services
 {
     public class PositionService : IPositionService
     {
-        public readonly DefaultContext _dbContext;
+        private readonly ILogger _logger;
+        private readonly DefaultContext _dbContext;
 
-        public PositionService(DefaultContext dbContext)
+        public PositionService(ILogger<PositionService> logger, DefaultContext dbContext)
         {
+            _logger = logger;
             _dbContext = dbContext;    
         }
 
