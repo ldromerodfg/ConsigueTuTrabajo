@@ -12,32 +12,35 @@ namespace Service.Services
     {
         private readonly ILogger _logger;
         private readonly DefaultContext _dbContext;
-        private readonly IBackupService _backupService;
 
-        public SettingService(ILogger<BackupService> logger, DefaultContext dbContext, IBackupService backupService)
+        public SettingService(ILogger<SettingService> logger, DefaultContext dbContext)
         {
             _logger = logger;
             _dbContext = dbContext;
-            _backupService = backupService;
         }
 
-        public async Task<Setting> Get()
+        public async Task<Setting> GetAsync()
         {
-            try {
+            try
+            {
                 if (!await _dbContext.Setting.AnyAsync())
                 {
                     _dbContext.Setting.Add(new Setting());
                     _dbContext.SaveChanges();
-
-                    await _backupService.GetBreezyToken();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
             }
 
-           return await _dbContext.Setting.FirstAsync();
+            return await _dbContext.Setting.FirstAsync();
+        }
+
+        public async Task UpdateAsync(Setting entity)
+        {
+            _dbContext.Setting.Update(entity);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

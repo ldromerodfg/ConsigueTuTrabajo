@@ -8,5 +8,11 @@ namespace Service.Interfaces
     {
         Task<IEnumerable<Position>> GetAllAsync(string state = null, string department = null, int? companyId = null);
         Task<Position> GetAsync(int id);
+        Task<Position> GetByBreezyIdAsync(string breezyId);
+        Task<Position> CreateAsync(Position entity);
+        Task CreateRangeAsync(IEnumerable<Position> entities);
+        Task UpdateAsync(Position entity);
+        Task UpdateRangeAsync(IEnumerable<Position> entities);
+        Task DeleteAsync(int id);
     }
 }

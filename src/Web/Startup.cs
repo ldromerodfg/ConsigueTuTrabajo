@@ -1,5 +1,3 @@
-using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using DataAccess.Contexts;
 using Microsoft.AspNetCore.Builder;
@@ -27,7 +25,7 @@ namespace Web
         {
             services.AddControllersWithViews();
 
-            services.AddDbContext<DefaultContext>(
+            services.AddDbContextPool<DefaultContext>(
                 options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
                 x => x.MigrationsAssembly("DataAccess")));
 
@@ -35,13 +33,18 @@ namespace Web
             services.AddTransient<IPositionService, PositionService>();
             services.AddTransient<ICandidateService, CandidateService>();
             services.AddTransient<IBackupService, BackupService>();
+            services.AddTransient<ICityService, CityService>();
+            services.AddTransient<ICompanyService, CompanyService>();
+            services.AddTransient<ICountryService, CountryService>();
+            services.AddTransient<IPositionTypeService, PositionTypeService>();
+            services.AddTransient<IStateService, StateService>();
+            services.AddTransient<ICandidateStageService, CandidateStageService>();
 
             services.AddSwaggerGen();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DefaultContext dbContext,
-            IBackupService backupService, ISettingService settingService)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory)
         {
             if (env.IsDevelopment())
             {
@@ -53,6 +56,33 @@ namespace Web
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+            Task.Run(async () =>
+            {
+                using (var scope = serviceScopeFactory.CreateScope())
+                {
+                    var settingService = scope.ServiceProvider.GetService<ISettingService>();
+                    var backupService = scope.ServiceProvider.GetService<IBackupService>();
+
+                    var setting = await settingService.GetAsync();
+
+                    if (setting.BreezyToken == null)
+                    {
+                        await backupService.GetBreezyToken();
+                        setting = await settingService.GetAsync();
+                    }
+
+                    await backupService.GetCountries();
+
+                    if (setting.BreezyToken != null)
+                    {
+                        await backupService.GetCompanies(setting.BreezyToken);
+                        await backupService.GetPositions(setting.BreezyToken);
+                        // await backupService.GetCandidates(setting.BreezyToken);
+                    }
+                }
+            });
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
