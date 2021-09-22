@@ -14,20 +14,34 @@ namespace Web.Controllers.API
     public class PositionsController : ControllerBase
     {
         private readonly ILogger<PositionsController> _logger;
+        private readonly ISettingService _settingService;
         private readonly IPositionService _positionService;
+        private readonly IBackupService _backupService;
 
-        public PositionsController(ILogger<PositionsController> logger, IPositionService positionService)
+        public PositionsController(ILogger<PositionsController> logger, ISettingService settingService,
+            IPositionService positionService, IBackupService backupService)
         {
             _logger = logger;
+            _settingService = settingService;
             _positionService = positionService;
+            _backupService = backupService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAsync(string state = null, string department = null, int? companyId = null)
+        public async Task<IActionResult> GetAsync(string state = null, string department = null,
+            int? companyId = null, int? cityId = null, int? positionTypeId = null, int? page_size = null,
+            int? page = null)
         {
+            if ((page_size != null && page == null) || (page_size == null && page != null)
+            || (page_size != null && page_size.Value > 20))
+            {
+                return BadRequest();
+            }
+
             try
             {
-                var positions = await _positionService.GetAllAsync(state, department, companyId);
+                var positions = await _positionService.GetAllAsync(state, department, companyId, cityId,
+                    positionTypeId, page_size, page);
 
                 return Ok(positions.Select(position => BuildResponse(position)));
             }
@@ -59,21 +73,22 @@ namespace Web.Controllers.API
         private PositionResponse BuildResponse(Position position)
         {
             return new PositionResponse
-                {
-                    Id = position.Id,
-                    Name = position.Name,
-                    BreezyId = position.BreezyId,
-                    State = position.State,
-                    Description = position.Description,
-                    Education = position.Education,
-                    Department = position.Department,
-                    RequisitionId = position.RequisitionId,
-                    QuestionaireId = position.QuestionaireId,
-                    PipelineId = position.PipelineId,
-                    CandidateType = position.CandidateType,
-                    Tags = position.OrgType,
-                    CreatorId = position.CreatorId
-                };
+            {
+                Id = position.Id,
+                Name = position.Name,
+                Description = position.Description,
+                Location = position.City != null
+                        ? $"{position.City.Name}, {position.City.State.Name}"
+                        : null,
+                Company = position.Company.Name,
+                Type = position.Type != null
+                        ? position.Type.Name
+                        : null,
+                CityId = position.CityId,
+                PositionTypeId = position.Type != null
+                    ? position.Type.Id
+                    : null
+            };
         }
     }
 }

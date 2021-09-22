@@ -17,7 +17,7 @@ namespace Service.Services
         public PositionService(ILogger<PositionService> logger, DefaultContext dbContext)
         {
             _logger = logger;
-            _dbContext = dbContext;    
+            _dbContext = dbContext;
         }
 
         public async Task<Position> CreateAsync(Position entity)
@@ -38,16 +38,47 @@ namespace Service.Services
             throw new System.NotImplementedException();
         }
 
-        public async Task<IEnumerable<Position>> GetAllAsync(string state = null, string department = null, int? companyId = null)
+        public async Task<IEnumerable<Position>> GetAllAsync(string state = null, string department = null,
+            int? companyId = null, int? cityId = null, int? positionTypeId = null, int? page_size = null, 
+            int? page = null)
         {
-            return await _dbContext.Position.Where(x => 
-                (state == null || x.State == state)
-                && (department == null || x.Department == department)
-                && (companyId == null || x.CompanyId == companyId))
-                .AsNoTracking()
-                .IgnoreQueryFilters()
-                .Include(x=>x.Company)
-                .ToListAsync();
+            if (page != null && page_size != null) 
+            {
+                var toSkip = page_size.Value * page;
+
+                return await _dbContext.Position.Where(x =>
+                    (state == null || x.State == state)
+                    && (department == null || x.Department == department)
+                    && (companyId == null || x.CompanyId == companyId)
+                    && (cityId == null || x.CityId == cityId)
+                    && (positionTypeId == null || (x.Type != null && x.Type.Id == positionTypeId)))
+                    .AsNoTracking()
+                    .IgnoreQueryFilters()
+                    .Include(x => x.Company)
+                    .Include(x => x.City)
+                        .ThenInclude(x => x.State)
+                            .ThenInclude(x => x.Country)
+                    .Include(x => x.Type)
+                    .Skip(toSkip.Value)
+                    .Take(page_size.Value)
+                    .OrderBy(x => x.Name).ToListAsync();
+            }
+            else {
+                return await _dbContext.Position.Where(x =>
+                    (state == null || x.State == state)
+                    && (department == null || x.Department == department)
+                    && (companyId == null || x.CompanyId == companyId)
+                    && (cityId == null || x.CityId == cityId)
+                    && (positionTypeId == null || (x.Type != null && x.Type.Id == positionTypeId)))
+                    .AsNoTracking()
+                    .IgnoreQueryFilters()
+                    .Include(x => x.Company)
+                    .Include(x => x.City)
+                        .ThenInclude(x => x.State)
+                            .ThenInclude(x => x.Country)
+                    .Include(x => x.Type)
+                    .OrderBy(x => x.Name).ToListAsync();
+            }
         }
 
         public async Task<Position> GetAsync(int id)
@@ -55,7 +86,7 @@ namespace Service.Services
             return await _dbContext.Position
                 .AsNoTracking()
                 .IgnoreQueryFilters()
-                .Include(x=>x.Company)
+                .Include(x => x.Company)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 

@@ -297,6 +297,7 @@ namespace Service.Services
                         {
                             var companyService = scope.ServiceProvider.GetService<ICompanyService>();
                             var positionService = scope.ServiceProvider.GetService<IPositionService>();
+                            var positionTypeService = scope.ServiceProvider.GetService<IPositionTypeService>();
 
                             while (tries < maxTries)
                             {
