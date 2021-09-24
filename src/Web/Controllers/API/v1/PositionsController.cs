@@ -29,8 +29,8 @@ namespace Web.Controllers.API
 
         [HttpGet]
         public async Task<IActionResult> GetAsync(string state = null, string department = null,
-            int? companyId = null, int? cityId = null, int? positionTypeId = null, int? page_size = null,
-            int? page = null)
+            int? companyId = null, int? cityId = null, int? positionTypeId = null, string search = null,
+            int? page_size = null, int? page = null)
         {
             if ((page_size != null && page == null) || (page_size == null && page != null)
             || (page_size != null && page_size.Value > 20))
@@ -41,7 +41,7 @@ namespace Web.Controllers.API
             try
             {
                 var positions = await _positionService.GetAllAsync(state, department, companyId, cityId,
-                    positionTypeId, page_size, page);
+                    positionTypeId, search, page_size, page);
 
                 return Ok(positions.Select(position => BuildResponse(position)));
             }
@@ -84,7 +84,9 @@ namespace Web.Controllers.API
                 Type = position.Type != null
                         ? position.Type.Name
                         : null,
-                CityId = position.CityId,
+                CityId = position.City != null
+                    ? position.City.Id
+                    : null,
                 PositionTypeId = position.Type != null
                     ? position.Type.Id
                     : null

@@ -763,7 +763,7 @@ namespace Service.Services
         private readonly ILogger _logger;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private Timer _timer;
-        private int pollingInterval = 60;
+        private int pollingInterval = 1;
 
         public PositionsPolling(ILogger<PositionsPolling> logger, IServiceScopeFactory serviceScopeFactory)
         {
