@@ -25,6 +25,18 @@ namespace Web
         {
             services.AddControllersWithViews();
 
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(
+                    builder =>
+                    {
+                        builder
+                            .AllowAnyOrigin()
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    });
+            });
+
             services.AddDbContextPool<DefaultContext>(
                 options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
                 x => x.MigrationsAssembly("DataAccess")));
@@ -57,6 +69,28 @@ namespace Web
                 app.UseHsts();
             }
 
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
+
+            app.UseRouting();
+
+            app.UseCors();
+
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapDefaultControllerRoute();
+            });
+
+            app.UseSwagger();
+
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.RoutePrefix = "api/v1";
+            });
+
             Task.Run(async () =>
             {
                 using (var scope = serviceScopeFactory.CreateScope())
@@ -78,31 +112,9 @@ namespace Web
                     {
                         await backupService.GetCompanies(setting.BreezyToken);
                         await backupService.GetPositions(setting.BreezyToken);
-                        // await backupService.GetCandidates(setting.BreezyToken);
+                        await backupService.GetCandidates(setting.BreezyToken);
                     }
                 }
-            });
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
-            });
-
-            app.UseSwagger();
-
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-                c.RoutePrefix = "api/v1";
             });
         }
     }
