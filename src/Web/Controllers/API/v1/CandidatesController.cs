@@ -1,7 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Domain.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Service.Interfaces;
@@ -34,12 +36,12 @@ namespace Web.Controllers.API
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message, ex);
-                return Problem();
+                return Problem(ex.Message);
             }
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetAsync(int id)
+        [HttpGet("{id}", Name = "GetByIdAsync")]
+        public async Task<IActionResult> GetByIdAsync(int id)
         {
             try
             {
@@ -52,31 +54,100 @@ namespace Web.Controllers.API
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message, ex);
-                return Problem();
+                return Problem(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PostAsync()
+        {
+            try
+            {
+                var exists = await _candidateService
+                    .GetByEmailOrPhone(Request.Form["Email"], Request.Form["PhoneNumber"]);
+
+                if (exists != null)
+                {
+                    return Problem(statusCode: 400);
+                }
+
+                // <<< POST TO BREEZY >>>
+
+                var candidate = new Candidate
+                {
+                    Name = Request.Form["Name"],
+                    Email = Request.Form["Email"],
+                    PhoneNumber = Request.Form["PhoneNumber"],
+                    PositionId = int.Parse(Request.Form["PositionId"]),
+                    CandidateStageId = 1 // Default???
+                };
+
+                candidate = await _candidateService.CreateAsync(candidate);
+
+                if (Request.Form.Files.Any())
+                {
+                    var file = Request.Form.Files[0];
+
+                    try
+                    {
+                        if (!Directory.Exists("./wwwroot/cv"))
+                        {
+                            Directory.CreateDirectory("./wwwroot/cv");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogInformation(ex.Message);
+                    }
+
+                    using (var inputStream = new FileStream($"./wwwroot/cv/{candidate.Name}.pdf", FileMode.Create))
+                    {
+                        await file.CopyToAsync(inputStream);
+                        byte[] array = new byte[inputStream.Length];
+                        inputStream.Seek(0, SeekOrigin.Begin);
+                        inputStream.Read(array, 0, array.Length);
+                    }
+                }
+
+                return CreatedAtRoute(
+                    nameof(GetByIdAsync),
+                    new { id = candidate.Id },
+                    new CandidateResponse
+                    {
+                        Id = candidate.Id,
+                        Name = candidate.Name,
+                        Email = candidate.Email,
+                        PhoneNumber = candidate.PhoneNumber
+                    });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return Problem(ex.Message);
             }
         }
 
         private CandidateResponse BuildResponse(Candidate candidate)
         {
             return new CandidateResponse
-                {
-                    Id = candidate.Id,
-                    Name = candidate.Name,
-                    BreezyId = candidate.BreezyId,
-                    MetaId = candidate.MetaId,
-                    Email = candidate.Email,
-                    Headline = candidate.Headline,
-                    Initial = candidate.Initial,
-                    Origin = candidate.Origin,
-                    PhoneNumber = candidate.PhoneNumber,
-                    Stage = candidate.Stage != null
+            {
+                Id = candidate.Id,
+                Name = candidate.Name,
+                BreezyId = candidate.BreezyId,
+                MetaId = candidate.MetaId,
+                Email = candidate.Email,
+                Headline = candidate.Headline,
+                Initial = candidate.Initial,
+                Origin = candidate.Origin,
+                PhoneNumber = candidate.PhoneNumber,
+                Stage = candidate.Stage != null
                         ? new CandidateStageResponse()
                         {
                             Id = candidate.Stage.Id,
                             Name = candidate.Stage.Name
                         }
                         : null
-                };
+            };
         }
     }
 }

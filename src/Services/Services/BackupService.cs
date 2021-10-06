@@ -36,7 +36,7 @@ namespace Service.Services
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private TimeSpan requestTimeout = TimeSpan.FromMinutes(2);
         private const int maxTries = 5;
-        private const int awaitTime = 120000;
+        private const int awaitTime = 60000;
 
         public BackupService(ILogger<BackupService> logger, DefaultContext dbContext,
             IConfiguration configuration, IPositionService positionService, IStateService stateService,
@@ -316,7 +316,7 @@ namespace Service.Services
                                     var dbPositions = await positionService.GetAllAsync(state: positionState);
 
                                     var newPositions = positions != null && positions.Any()
-                                        ? positions.Where(x => !dbPositions.Select(x => x.BreezyId).Contains((string)x._id))
+                                        ? positions.Where(x => !dbPositions.Select(x => x.BreezyId.Trim()).Contains(((string)x._id).Trim()))
                                         : new List<dynamic>();
 
                                     if (newPositions.Any())
@@ -409,7 +409,7 @@ namespace Service.Services
 
         public async Task GetCandidates(string breezyToken)
         {
-            var dbCandidates = await _candidateService.GetAllAsync();
+            var dbCandidates = (await _candidateService.GetAllAsync()).ToList();
 
             if (!dbCandidates.Any())
             {
@@ -591,8 +591,6 @@ namespace Service.Services
                                     {
                                         _logger.LogInformation($"UNSUCCESSFUL REQUEST. STATUS CODE {candidateResponse.StatusCode}");
                                         Thread.Sleep(awaitTime);
-
-                                        _logger.LogInformation($"REQUEST LIMIT REACHED. {awaitTime / 1000} MINUTES...");
 
                                         tries++;
                                     }

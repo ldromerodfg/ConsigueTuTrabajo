@@ -111,7 +111,8 @@ namespace Service.Services
                         ? new Company
                         {
                             Name = x.Company.Name,
-                            Id = x.Company.Id
+                            Id = x.Company.Id,
+                            BreezyId = x.Company.BreezyId
                         }
                         : null
                     })
@@ -181,7 +182,8 @@ namespace Service.Services
                         ? new Company
                         {
                             Name = x.Company.Name,
-                            Id = x.Company.Id
+                            Id = x.Company.Id,
+                            BreezyId = x.Company.BreezyId
                         }
                         : null
                     })

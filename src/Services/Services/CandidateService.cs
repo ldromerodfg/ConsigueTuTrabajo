@@ -17,7 +17,7 @@ namespace Service.Services
         public CandidateService(ILogger<CandidateService> logger, DefaultContext dbContext)
         {
             _logger = logger;
-            _dbContext = dbContext;    
+            _dbContext = dbContext;
         }
 
         public async Task<Candidate> CreateAsync(Candidate entity)
@@ -38,7 +38,7 @@ namespace Service.Services
                 .Include(x => x.Stage)
                 .AsNoTracking()
                 .IgnoreQueryFilters()
-                .Where(x => 
+                .Where(x =>
                     (email == null || x.Email == email)
                     && (origin == null || x.Origin == origin)
                     && (breezyId == null || x.BreezyId == breezyId))
@@ -48,6 +48,17 @@ namespace Service.Services
         public async Task<Candidate> GetAsync(int id)
         {
             return await _dbContext.Candidate.FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<Candidate> GetByEmailOrPhone(string email = null, string phoneNumber = null)
+        {
+            return await _dbContext.Candidate
+                .Include(x => x.Stage)
+                .AsNoTracking()
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(x =>
+                    (email == null || x.Email == email)
+                    && (phoneNumber == null || x.PhoneNumber == phoneNumber));
         }
 
         public Task UpdateAsync(Candidate entity)

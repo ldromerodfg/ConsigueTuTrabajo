@@ -8,6 +8,8 @@ namespace Domain.Entities
     [Table("Candidate", Schema = "blogic")]
     [Index(nameof(BreezyId))]
     [Index(nameof(Email))]
+    [Index(nameof(PhoneNumber))]
+    [Index(nameof(PositionId), nameof(Email), nameof(PhoneNumber))]
     public class Candidate : BaseEntity
     {
         public Candidate() { }
