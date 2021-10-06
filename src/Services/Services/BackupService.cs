@@ -158,7 +158,7 @@ namespace Service.Services
 
                     try
                     {
-                        var countryResponse = await client.GetAsync("https://restcountries.eu/rest/v2/all");
+                        var countryResponse = await client.GetAsync("https://cs7100320017169cfe0.blob.core.windows.net/cttcontainer/countries.json");
                         countryResponse.EnsureSuccessStatusCode();
                         var countryResponseBody = await countryResponse.Content.ReadAsStringAsync();
 
@@ -171,7 +171,7 @@ namespace Service.Services
                                 var country = new Country
                                 {
                                     Name = c.name,
-                                    Code = c.alpha2Code
+                                    Code = c.code
                                 };
 
                                 await _countryService.CreateAsync(country);
@@ -336,6 +336,7 @@ namespace Service.Services
                                     var updatedPositions = positions.Where(x =>
                                             !string.IsNullOrEmpty((string)x.updated_date)
                                                 ? DateTime.Parse((string)x.updated_date) > DateTime.Now.AddHours(-1)
+                                                    && dbPositions.Any(y => y.BreezyId.Trim() == ((string)x._id).Trim())
                                                 : false);
 
                                     foreach (var position in updatedPositions)
@@ -771,7 +772,7 @@ namespace Service.Services
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            Thread.Sleep(60000);
+            Thread.Sleep(120000);
 
             _timer = new Timer(
                 PollForPositions,
