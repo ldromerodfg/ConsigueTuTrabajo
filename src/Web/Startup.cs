@@ -113,7 +113,7 @@ namespace Web
                         await backupService.GetCountries();
                         await backupService.GetCompanies(setting.BreezyToken);
                         await backupService.GetPositions(setting.BreezyToken);
-                        await backupService.GetCandidates(setting.BreezyToken);
+                        // await backupService.GetCandidates(setting.BreezyToken);
                     }
                 }
             });
