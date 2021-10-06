@@ -110,8 +110,9 @@ namespace Web
 
                     if (setting.BreezyToken != null)
                     {
+                        await backupService.GetCountries();
                         await backupService.GetCompanies(setting.BreezyToken);
-                        await backupService.GetPositions(setting.BreezyToken);
+                        //await backupService.GetPositions(setting.BreezyToken);
                         // await backupService.GetCandidates(setting.BreezyToken);
                     }
                 }
