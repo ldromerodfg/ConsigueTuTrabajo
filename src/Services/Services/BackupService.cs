@@ -74,8 +74,8 @@ namespace Service.Services
                     try
                     {
                         var content = new List<KeyValuePair<string, string>>();
-                        content.Add(new KeyValuePair<string, string>("email", _configuration["BreezyHR:Email"]));
-                        content.Add(new KeyValuePair<string, string>("password", _configuration["BreezyHR:Password"]));
+                        content.Add(new KeyValuePair<string, string>("email", "ctt@diazfontanez.group"));
+                        content.Add(new KeyValuePair<string, string>("password", "Gah46521"));
                         var request = new HttpRequestMessage(HttpMethod.Post, "https://api.breezy.hr/v3/signin")
                         {
                             Content = new FormUrlEncodedContent(content)
