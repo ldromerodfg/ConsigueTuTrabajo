@@ -15,7 +15,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
+      
+      - name: Delete Artifacts
+        # You may pin to the exact commit or the version.
+        # uses: jimschubert/delete-artifacts-action@5e12816fde69c33b3374ee9d14d0e97137064bce
+        uses: jimschubert/delete-artifacts-action@v1
+        with:
+          # GitHub token used to access the repository defined in the GITHUB_REPOSITORY input.
+          GITHUB_TOKEN: ${{github.token}}
+          # The target github repo in the format owner/repo
+          GITHUB_REPOSITORY: ${{github.repository}}
+          # A specific Actions run identifier. You can use this to specify the current run and do some post-run cleanup.
+      
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v1
         with:
